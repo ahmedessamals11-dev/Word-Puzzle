@@ -1,0 +1,1288 @@
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I Plus One - Word Puzzle</title>
+    <style>
+        :root {
+            --orange: #FF8C00;
+            --yellow: #FFD700;
+            --fire-red: #FF4500;
+            --dark-orange: #E67E00;
+            --light-yellow: #FFFACD;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: #FFF5E6;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: var(--fire-red);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 5px;
+            background: linear-gradient(to right, var(--fire-red), var(--orange), var(--yellow));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--orange);
+            margin-bottom: 15px;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            gap: 20px;
+        }
+
+        .level-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            background-color: var(--light-yellow);
+            padding: 10px 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+
+        .level-info span {
+            font-weight: bold;
+            color: var(--fire-red);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, var(--yellow), var(--orange));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .grid-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .letter-grid {
+            display: grid;
+            gap: 3px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .letter-cell {
+            background-color: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 1/1;
+        }
+
+        .letter-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .letter-cell.selected {
+            background-color: var(--yellow);
+            color: var(--fire-red);
+            transform: scale(1.1);
+        }
+
+        .letter-cell.found {
+            background-color: var(--orange);
+            color: white;
+            animation: pulse 0.5s ease;
+        }
+
+        .letter-cell.invalid {
+            background-color: #ffcccc;
+            color: #ff3333;
+            animation: shake 0.5s ease;
+        }
+
+        .word-list {
+            width: 100%;
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            min-height: 150px;
+        }
+
+        .word-list h3 {
+            color: var(--orange);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .found-words {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .found-word {
+            background-color: var(--light-yellow);
+            color: var(--fire-red);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: var(--orange);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: var(--dark-orange);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .level-complete {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .level-complete-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 80%;
+            animation: zoomIn 0.5s ease;
+        }
+
+        .level-complete h2 {
+            color: var(--fire-red);
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .level-complete p {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .level-complete button {
+            font-size: 1.2rem;
+            padding: 12px 25px;
+        }
+
+        .level-select {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .level-select-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: zoomIn 0.5s ease;
+        }
+
+        .level-select h2 {
+            color: var(--fire-red);
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .level-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .level-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .level-btn.locked {
+            background-color: #ccc;
+            color: #666;
+        }
+
+        .level-btn.unlocked {
+            background-color: var(--orange);
+            color: white;
+        }
+
+        .level-btn.completed {
+            background-color: var(--yellow);
+            color: var(--fire-red);
+        }
+
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--fire-red), var(--orange));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            animation: fadeOut 2s ease-in-out 2s forwards;
+        }
+
+        .splash-content {
+            text-align: center;
+            animation: bounce 1s ease infinite alternate;
+        }
+
+        .splash-screen h1 {
+            font-size: 4rem;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .splash-screen p {
+            color: white;
+            font-size: 1.5rem;
+            opacity: 0;
+            animation: fadeIn 1s ease 1s forwards;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-20px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            h2 {
+                font-size: 1.2rem;
+            }
+            
+            .letter-cell {
+                font-size: 1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+                max-width: 200px;
+            }
+            
+            .level-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+
+        /* Selection line styling */
+        .selection-line {
+            position: absolute;
+            background-color: rgba(255, 215, 0, 0.5);
+            transform-origin: left center;
+            z-index: 10;
+            pointer-events: none;
+        }
+    </style>
+
+    <div class="splash-screen">
+        <div class="splash-content">
+            <h1>I Plus One</h1>
+            <p>Word Puzzle Adventure</p>
+        </div>
+    </div>
+
+    <div class="level-select" style="display: none;">
+        <div class="level-select-content">
+            <h2>Select Level</h2>
+            <div class="level-buttons" id="level-buttons">
+                <!-- Level buttons will be added here by JavaScript -->
+            </div>
+            <button id="close-level-select">Close</button>
+        </div>
+    </div>
+
+    <div class="level-complete" style="display: none;">
+        <div class="level-complete-content">
+            <h2>Level Complete!</h2>
+            <p>Congratulations! You found all the words.</p>
+            <button id="next-level">Next Level</button>
+            <button id="back-to-levels" style="margin-top: 10px;">Back to Levels</button>
+        </div>
+    </div>
+
+    <header>
+        <h1>I Plus One</h1>
+        <h2>Word Puzzle</h2>
+    </header>
+
+    <div class="game-container">
+        <div class="level-info">
+            <div>Level: <span id="current-level">1</span></div>
+            <div>Words Found: <span id="words-found">0</span>/<span id="total-words">0</span></div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress" id="progress-bar"></div>
+        </div>
+        <div class="grid-container">
+            <div class="letter-grid" id="letter-grid">
+                <!-- Letter grid will be populated by JavaScript -->
+            </div>
+            <div class="selection-line" id="selection-line" style="display: none;"></div>
+        </div>
+        <div class="word-list">
+            <h3>Found Words</h3>
+            <div class="found-words" id="found-words">
+                <!-- Found words will be added here -->
+            </div>
+        </div>
+        <div class="controls">
+            <button id="shuffle-btn">Shuffle</button>
+            <button id="hint-btn">Hint</button>
+            <button id="change-level">Change Level</button>
+        </div>
+    </div>
+
+    <audio id="click-sound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU..."></audio>
+    <audio id="success-sound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU..."></audio>
+    <audio id="complete-sound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU..."></audio>
+    <audio id="error-sound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU..."></audio>
+
+    <script>
+        // Word lists by difficulty
+        const wordLists = {
+            // Tier 1: Beginner (3-5 letters)
+            easy: [
+                "CAT", "DOG", "SUN", "BED", "RUN", "HAT", "CAR", "BAG", "FAN", "BAT",
+                "LEG", "ARM", "EYE", "HOT", "COLD", "TEA", "MILK", "EGG", "FISH", "BOOK",
+                "BOY", "GIRL", "MAN", "WOMAN", "MOM", "DAD", "SON", "TOY", "BIG", "SMALL"
+            ],
+            // Tier 2: Simple (4-6 letters)
+            medium: [
+                "HOUSE", "WATER", "APPLE", "CHILD", "BREAD", "PHONE", "TABLE", "CHAIR",
+                "SMILE", "OCEAN", "GRASS", "CLOUD", "MUSIC", "STORM", "LIGHT", "FRUIT",
+                "BEACH", "HORSE", "TIGER", "RIVER", "GARDEN", "PENCIL", "DOCTOR", "FRIEND"
+            ],
+            // Tier 3: Intermediate (5-8 letters)
+            hard: [
+                "FAMILY", "SCHOOL", "DOCTOR", "FRIEND", "GARDEN", "PICTURE", "COMPUTER",
+                "TEACHER", "HOSPITAL", "BALLOON", "WEATHER", "BREAKFAST", "NOTEBOOK",
+                "LIBRARY", "COUNTRY", "MORNING", "ELEPHANT", "KANGAROO", "MOUNTAIN"
+            ],
+            // Tier 4: Advanced (7-10 letters)
+            advanced: [
+                "KNOWLEDGE", "EDUCATION", "HAPPINESS", "RESTAURANT", "TELEVISION",
+                "UNIVERSITY", "COMMUNICATE", "BEAUTIFUL", "DIFFICULT", "IMPORTANT",
+                "DISCOVERY", "ADVENTURE", "DEMOCRACY", "LEADERSHIP", "CREATIVITY"
+            ],
+            // Tier 5: Expert (10-15 letters)
+            expert: [
+                "ACCOMMODATE", "BENEFACTOR", "HETEROGENEOUS", "JURISDICTION",
+                "MAGNANIMOUS", "QUINTESSENTIAL", "RESILIENT", "SCRUTINIZE", "TRANSCEND",
+                "EXTRAORDINARY", "INCOMPREHENSIBLE", "INTERNATIONAL", "CONSEQUENTLY"
+            ]
+        };
+
+        // Generate all 100 levels
+        function generateAllLevels() {
+            const levels = [];
+            for (let level = 1; level <= 100; level++) {
+                const tier = Math.floor((level - 1) / 20) + 1;
+                let rows, cols, wordList, directions;
+
+                // Adjust difficulty based on tier
+                switch (tier) {
+                    case 1: // Levels 1-20 (Beginner)
+                        rows = 6 + Math.floor(level / 5);
+                        cols = rows;
+                        wordList = wordLists.easy;
+                        directions = ["horizontal", "vertical"];
+                        break;
+                    case 2: // Levels 21-40 (Easy)
+                        rows = 8 + Math.floor((level - 20) / 5);
+                        cols = rows;
+                        wordList = wordLists.medium;
+                        directions = ["horizontal", "vertical", "diagonal"];
+                        break;
+                    case 3: // Levels 41-60 (Intermediate)
+                        rows = 10 + Math.floor((level - 40) / 5);
+                        cols = rows;
+                        wordList = wordLists.hard;
+                        directions = ["horizontal", "vertical", "diagonal", "backwards"];
+                        break;
+                    case 4: // Levels 61-80 (Advanced)
+                        rows = 12 + Math.floor((level - 60) / 5);
+                        cols = rows;
+                        wordList = wordLists.advanced;
+                        directions = ["horizontal", "vertical", "diagonal", "backwards"];
+                        break;
+                    case 5: // Levels 81-100 (Expert)
+                        rows = 15 + Math.floor((level - 80) / 4);
+                        cols = rows;
+                        wordList = wordLists.expert;
+                        directions = ["horizontal", "vertical", "diagonal", "backwards"];
+                        break;
+                }
+
+                // Select random words for this level
+                const numWords = 5 + Math.floor(level / 10);
+                const selectedWords = [];
+                for (let i = 0; i < numWords; i++) {
+                    const randomWord = wordList[Math.floor(Math.random() * wordList.length)];
+                    if (!selectedWords.includes(randomWord)) {
+                        selectedWords.push(randomWord);
+                    }
+                }
+
+                // Generate the word search grid
+                const grid = generateWordSearchGrid(rows, cols, selectedWords, directions);
+                
+                levels.push({
+                    level: level - 1, // Using 0-based index internally
+                    grid,
+                    words: selectedWords,
+                    minLength: Math.min(...selectedWords.map(w => w.length)),
+                    maxLength: Math.max(...selectedWords.map(w => w.length))
+                });
+            }
+            return levels;
+        }
+
+        // Generate word search grid
+        function generateWordSearchGrid(rows, cols, words, directions = ["horizontal", "vertical"]) {
+            // Initialize empty grid
+            const grid = Array(rows).fill().map(() => Array(cols).fill(''));
+            const usedPositions = new Set();
+
+            // Helper: Get random direction
+            const getRandomDirection = () => directions[Math.floor(Math.random() * directions.length)];
+
+            // Place each word in the grid
+            words.forEach(word => {
+                let placed = false;
+                let attempts = 0;
+                while (!placed && attempts < 100) {
+                    const direction = getRandomDirection();
+                    const { startRow, startCol, dr, dc } = getStartPosition(rows, cols, direction, word.length);
+                    
+                    if (canPlaceWord(grid, word, startRow, startCol, dr, dc, usedPositions)) {
+                        placeWord(grid, word, startRow, startCol, dr, dc, usedPositions);
+                        placed = true;
+                    }
+                    attempts++;
+                }
+            });
+
+            // Fill remaining spaces with random letters
+            fillEmptySpaces(grid);
+            return grid;
+        }
+
+        function getStartPosition(rows, cols, direction, wordLength) {
+            if (direction === "horizontal") {
+                return {
+                    startRow: Math.floor(Math.random() * rows),
+                    startCol: Math.floor(Math.random() * (cols - wordLength + 1)),
+                    dr: 0,
+                    dc: 1
+                };
+            } else if (direction === "vertical") {
+                return {
+                    startRow: Math.floor(Math.random() * (rows - wordLength + 1)),
+                    startCol: Math.floor(Math.random() * cols),
+                    dr: 1,
+                    dc: 0
+                };
+            } else if (direction === "diagonal") {
+                return {
+                    startRow: Math.floor(Math.random() * (rows - wordLength + 1)),
+                    startCol: Math.floor(Math.random() * (cols - wordLength + 1)),
+                    dr: 1,
+                    dc: 1
+                };
+            } else if (direction === "backwards") {
+                return {
+                    startRow: Math.floor(Math.random() * rows),
+                    startCol: Math.floor(Math.random() * (cols - wordLength + 1)) + wordLength - 1,
+                    dr: 0,
+                    dc: -1
+                };
+            }
+        }
+
+        function canPlaceWord(grid, word, row, col, dr, dc, usedPositions) {
+            for (let i = 0; i < word.length; i++) {
+                const r = row + i * dr;
+                const c = col + i * dc;
+                if (r >= grid.length || c >= grid[0].length || c < 0) return false;
+                if (grid[r][c] !== '' && grid[r][c] !== word[i]) return false;
+            }
+            return true;
+        }
+
+        function placeWord(grid, word, row, col, dr, dc, usedPositions) {
+            for (let i = 0; i < word.length; i++) {
+                const r = row + i * dr;
+                const c = col + i * dc;
+                grid[r][c] = word[i];
+                usedPositions.add(`${r},${c}`);
+            }
+        }
+
+        function fillEmptySpaces(grid) {
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (let r = 0; r < grid.length; r++) {
+                for (let c = 0; c < grid[r].length; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                }
+            }
+        }
+
+        // Game state
+        let gameState = {
+            currentLevel: 0,
+            foundWords: [],
+            selectedCells: [],
+            isSelecting: false,
+            lastSelectedCell: null,
+            unlockedLevels: [0], // Start with level 0 unlocked
+            completedLevels: [],
+            isCheckingWord: false
+        };
+
+        // DOM elements
+        const letterGrid = document.getElementById('letter-grid');
+        const selectionLine = document.getElementById('selection-line');
+        const foundWordsContainer = document.getElementById('found-words');
+        const currentLevelDisplay = document.getElementById('current-level');
+        const wordsFoundDisplay = document.getElementById('words-found');
+        const totalWordsDisplay = document.getElementById('total-words');
+        const progressBar = document.getElementById('progress-bar');
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        const hintBtn = document.getElementById('hint-btn');
+        const changeLevelBtn = document.getElementById('change-level');
+        const levelCompleteModal = document.querySelector('.level-complete');
+        const nextLevelBtn = document.getElementById('next-level');
+        const backToLevelsBtn = document.getElementById('back-to-levels');
+        const levelSelectModal = document.querySelector('.level-select');
+        const levelButtonsContainer = document.getElementById('level-buttons');
+        const closeLevelSelectBtn = document.getElementById('close-level-select');
+        const clickSound = document.getElementById('click-sound');
+        const successSound = document.getElementById('success-sound');
+        const completeSound = document.getElementById('complete-sound');
+        const errorSound = document.getElementById('error-sound');
+
+        // Generate all levels
+        const gameData = {
+            levels: generateAllLevels()
+        };
+
+        // Initialize the game
+        function initGame() {
+            loadGameState();
+            setupLevelSelect();
+            renderLevel(gameState.currentLevel);
+            setupEventListeners();
+        }
+
+        // Load game state from localStorage
+        function loadGameState() {
+            const savedState = localStorage.getItem('wordPuzzleGameState');
+            if (savedState) {
+                const parsedState = JSON.parse(savedState);
+                gameState.unlockedLevels = parsedState.unlockedLevels || [0];
+                gameState.completedLevels = parsedState.completedLevels || [];
+                
+                // Make sure level 0 is always unlocked
+                if (!gameState.unlockedLevels.includes(0)) {
+                    gameState.unlockedLevels.push(0);
+                }
+            }
+        }
+
+        // Save game state to localStorage
+        function saveGameState() {
+            localStorage.setItem('wordPuzzleGameState', JSON.stringify({
+                unlockedLevels: gameState.unlockedLevels,
+                completedLevels: gameState.completedLevels
+            }));
+        }
+
+        // Setup level select modal
+        function setupLevelSelect() {
+            levelButtonsContainer.innerHTML = '';
+            gameData.levels.forEach((level, index) => {
+                const levelBtn = document.createElement('button');
+                levelBtn.className = 'level-btn';
+                levelBtn.textContent = index + 1;
+                
+                if (gameState.unlockedLevels.includes(index)) {
+                    levelBtn.classList.add('unlocked');
+                    if (gameState.completedLevels.includes(index)) {
+                        levelBtn.classList.add('completed');
+                    }
+                } else {
+                    levelBtn.classList.add('locked');
+                    levelBtn.disabled = true;
+                }
+                
+                levelBtn.addEventListener('click', () => {
+                    if (gameState.unlockedLevels.includes(index)) {
+                        gameState.currentLevel = index;
+                        renderLevel(index);
+                        levelSelectModal.style.display = 'none';
+                    }
+                });
+                
+                levelButtonsContainer.appendChild(levelBtn);
+            });
+        }
+
+        // Render a level
+        function renderLevel(levelIndex) {
+            gameState.foundWords = [];
+            gameState.selectedCells = [];
+            foundWordsContainer.innerHTML = '';
+            wordsFoundDisplay.textContent = '0';
+            currentLevelDisplay.textContent = levelIndex + 1;
+            
+            const level = gameData.levels[levelIndex];
+            totalWordsDisplay.textContent = level.words.length;
+            progressBar.style.width = '0%';
+            
+            // Set up the grid container
+            const gridSize = level.grid.length;
+            letterGrid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            letterGrid.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+            letterGrid.innerHTML = '';
+            
+            // Create the letter grid
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'letter-cell';
+                    cell.textContent = level.grid[row][col];
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    // Touch events for mobile
+                    cell.addEventListener('touchstart', handleCellTouchStart);
+                    cell.addEventListener('touchmove', handleCellTouchMove);
+                    cell.addEventListener('touchend', handleCellTouchEnd);
+                    
+                    // Mouse events for desktop
+                    cell.addEventListener('mousedown', handleCellMouseDown);
+                    cell.addEventListener('mouseenter', handleCellMouseEnter);
+                    cell.addEventListener('mouseup', handleCellMouseUp);
+                    
+                    letterGrid.appendChild(cell);
+                }
+            }
+        }
+
+        // Handle cell mouse down
+        function handleCellMouseDown(e) {
+            playSound(clickSound);
+            gameState.isSelecting = true;
+            const cell = e.target;
+            selectCell(cell);
+        }
+
+        // Handle cell mouse enter
+        function handleCellMouseEnter(e) {
+            if (gameState.isSelecting) {
+                const cell = e.target;
+                
+                // Check if the cell is adjacent to the last selected cell
+                if (gameState.selectedCells.length > 0) {
+                    const lastCell = gameState.selectedCells[gameState.selectedCells.length - 1];
+                    const lastRow = parseInt(lastCell.dataset.row);
+                    const lastCol = parseInt(lastCell.dataset.col);
+                    const currentRow = parseInt(cell.dataset.row);
+                    const currentCol = parseInt(cell.dataset.col);
+                    
+                    // Check if the cell is in a straight line (horizontal, vertical, or diagonal)
+                    const rowDiff = Math.abs(currentRow - lastRow);
+                    const colDiff = Math.abs(currentCol - lastCol);
+                    
+                    if ((rowDiff <= 1 && colDiff <= 1) && !(rowDiff === 0 && colDiff === 0)) {
+                        selectCell(cell);
+                        updateSelectionLine();
+                    }
+                } else {
+                    selectCell(cell);
+                }
+            }
+        }
+
+        // Handle cell mouse up
+        function handleCellMouseUp() {
+            if (gameState.isSelecting) {
+                gameState.isSelecting = false;
+                checkSelectedWord();
+                hideSelectionLine();
+            }
+        }
+
+        // Handle cell touch start
+        function handleCellTouchStart(e) {
+            e.preventDefault();
+            playSound(clickSound);
+            gameState.isSelecting = true;
+            const cell = e.target;
+            selectCell(cell);
+        }
+
+        // Handle cell touch move
+        function handleCellTouchMove(e) {
+            e.preventDefault();
+            if (gameState.isSelecting) {
+                const touch = e.touches[0];
+                const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (element && element.classList.contains('letter-cell')) {
+                    const cell = element;
+                    
+                    // Check if the cell is adjacent to the last selected cell
+                    if (gameState.selectedCells.length > 0) {
+                        const lastCell = gameState.selectedCells[gameState.selectedCells.length - 1];
+                        const lastRow = parseInt(lastCell.dataset.row);
+                        const lastCol = parseInt(lastCell.dataset.col);
+                        const currentRow = parseInt(cell.dataset.row);
+                        const currentCol = parseInt(cell.dataset.col);
+                        
+                        // Check if the cell is in a straight line (horizontal, vertical, or diagonal)
+                        const rowDiff = Math.abs(currentRow - lastRow);
+                        const colDiff = Math.abs(currentCol - lastCol);
+                        
+                        if ((rowDiff <= 1 && colDiff <= 1) && !(rowDiff === 0 && colDiff === 0)) {
+                            selectCell(cell);
+                            updateSelectionLine();
+                        }
+                    } else {
+                        selectCell(cell);
+                    }
+                }
+            }
+        }
+
+        // Handle cell touch end
+        function handleCellTouchEnd() {
+            if (gameState.isSelecting) {
+                gameState.isSelecting = false;
+                checkSelectedWord();
+                hideSelectionLine();
+            }
+        }
+
+        // Select a cell
+        function selectCell(cell) {
+            // Don't allow selecting the same cell twice
+            if (gameState.selectedCells.includes(cell)) return;
+            
+            // Highlight the cell
+            cell.classList.add('selected');
+            gameState.selectedCells.push(cell);
+            gameState.lastSelectedCell = cell;
+        }
+
+        // Update the selection line
+        function updateSelectionLine() {
+            if (gameState.selectedCells.length < 2) {
+                hideSelectionLine();
+                return;
+            }
+            
+            const firstCell = gameState.selectedCells[0];
+            const lastCell = gameState.selectedCells[gameState.selectedCells.length - 1];
+            
+            const firstRect = firstCell.getBoundingClientRect();
+            const lastRect = lastCell.getBoundingClientRect();
+            
+            const gridRect = letterGrid.getBoundingClientRect();
+            
+            const x1 = firstRect.left + firstRect.width / 2 - gridRect.left;
+            const y1 = firstRect.top + firstRect.height / 2 - gridRect.top;
+            const x2 = lastRect.left + lastRect.width / 2 - gridRect.left;
+            const y2 = lastRect.top + lastRect.height / 2 - gridRect.top;
+            
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            selectionLine.style.width = `${length}px`;
+            selectionLine.style.height = '8px';
+            selectionLine.style.left = `${x1}px`;
+            selectionLine.style.top = `${y1}px`;
+            selectionLine.style.transform = `rotate(${angle}deg)`;
+            selectionLine.style.display = 'block';
+        }
+
+        // Hide the selection line
+        function hideSelectionLine() {
+            selectionLine.style.display = 'none';
+        }
+
+        // Check if the selected letters form a valid word
+        async function checkSelectedWord() {
+            if (gameState.isCheckingWord) return;
+            
+            if (gameState.selectedCells.length < gameData.levels[gameState.currentLevel].minLength) {
+                clearSelection();
+                return;
+            }
+            
+            const selectedWord = gameState.selectedCells.map(cell => cell.textContent).join('');
+            const levelWords = gameData.levels[gameState.currentLevel].words;
+            
+            // First check if the word is in our predefined list
+            if (levelWords.includes(selectedWord) && !gameState.foundWords.includes(selectedWord)) {
+                acceptWord(selectedWord);
+                return;
+            }
+            
+            // If not in our list, check with the dictionary API
+            gameState.isCheckingWord = true;
+            hintBtn.disabled = true;
+            shuffleBtn.disabled = true;
+            
+            try {
+                const isValid = await validateWordWithAPI(selectedWord);
+                
+                if (isValid && !gameState.foundWords.includes(selectedWord)) {
+                    acceptWord(selectedWord);
+                } else {
+                    rejectWord();
+                }
+            } catch (error) {
+                console.error('Error validating word:', error);
+                // Fallback to our predefined list if API fails
+                if (levelWords.includes(selectedWord) && !gameState.foundWords.includes(selectedWord)) {
+                    acceptWord(selectedWord);
+                } else {
+                    rejectWord();
+                }
+            } finally {
+                gameState.isCheckingWord = false;
+                hintBtn.disabled = false;
+                shuffleBtn.disabled = false;
+            }
+        }
+
+        // Validate word with Free Dictionary API
+        async function validateWordWithAPI(word) {
+            // Skip API validation for very short words
+            if (word.length <= 2) return false;
+            
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+                if (!response.ok) {
+                    return false;
+                }
+                const data = await response.json();
+                return Array.isArray(data) && data.length > 0;
+            } catch (error) {
+                console.error('API error:', error);
+                return false;
+            }
+        }
+
+        // Accept a valid word
+        function acceptWord(word) {
+            playSound(successSound);
+            gameState.foundWords.push(word);
+            
+            // Mark cells as found
+            gameState.selectedCells.forEach(cell => {
+                cell.classList.remove('selected');
+                cell.classList.add('found');
+                
+                // Add pulse animation
+                cell.style.animation = 'pulse 0.5s ease';
+                setTimeout(() => {
+                    cell.style.animation = '';
+                }, 500);
+            });
+            
+            // Add word to found words list
+            const wordElement = document.createElement('span');
+            wordElement.className = 'found-word';
+            wordElement.textContent = word;
+            foundWordsContainer.appendChild(wordElement);
+            
+            // Update UI
+            wordsFoundDisplay.textContent = gameState.foundWords.length;
+            const progress = (gameState.foundWords.length / gameData.levels[gameState.currentLevel].words.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // Clear selection
+            gameState.selectedCells = [];
+            gameState.lastSelectedCell = null;
+            
+            // Check if level is complete
+            if (gameState.foundWords.length >= gameData.levels[gameState.currentLevel].words.length) {
+                completeLevel();
+            }
+        }
+
+        // Reject an invalid word
+        function rejectWord() {
+            playSound(errorSound);
+            
+            // Mark cells as invalid
+            gameState.selectedCells.forEach(cell => {
+                cell.classList.remove('selected');
+                cell.classList.add('invalid');
+                
+                // Add shake animation
+                cell.style.animation = 'shake 0.5s ease';
+                setTimeout(() => {
+                    cell.classList.remove('invalid');
+                    cell.style.animation = '';
+                }, 500);
+            });
+            
+            // Clear selection after animation
+            setTimeout(() => {
+                gameState.selectedCells = [];
+                gameState.lastSelectedCell = null;
+            }, 500);
+        }
+
+        // Clear the current selection
+        function clearSelection() {
+            gameState.selectedCells.forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            gameState.selectedCells = [];
+            gameState.lastSelectedCell = null;
+        }
+
+        // Complete the current level
+        function completeLevel() {
+            playSound(completeSound);
+            
+            // Mark level as completed
+            if (!gameState.completedLevels.includes(gameState.currentLevel)) {
+                gameState.completedLevels.push(gameState.currentLevel);
+            }
+            
+            // Unlock next level if not already unlocked
+            const nextLevel = gameState.currentLevel + 1;
+            if (nextLevel < gameData.levels.length && !gameState.unlockedLevels.includes(nextLevel)) {
+                gameState.unlockedLevels.push(nextLevel);
+            }
+            
+            // Save game state
+            saveGameState();
+            
+            // Show level complete modal
+            levelCompleteModal.style.display = 'flex';
+        }
+
+        // Shuffle the grid
+        function shuffleGrid() {
+            playSound(clickSound);
+            const level = gameData.levels[gameState.currentLevel];
+            const grid = level.grid;
+            
+            // Flatten the grid and shuffle
+            const flatGrid = grid.flat();
+            for (let i = flatGrid.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [flatGrid[i], flatGrid[j]] = [flatGrid[j], flatGrid[i]];
+            }
+            
+            // Rebuild the grid
+            for (let i = 0; i < flatGrid.length; i++) {
+                const row = Math.floor(i / grid.length);
+                const col = i % grid.length;
+                grid[row][col] = flatGrid[i];
+            }
+            
+            // Re-render the grid
+            renderLevel(gameState.currentLevel);
+        }
+
+        // Show a hint
+        function showHint() {
+            playSound(clickSound);
+            const level = gameData.levels[gameState.currentLevel];
+            const availableWords = level.words.filter(word => !gameState.foundWords.includes(word));
+            
+            if (availableWords.length > 0) {
+                // Find the first available word in the grid
+                for (const word of availableWords) {
+                    const positions = findWordInGrid(word);
+                    if (positions) {
+                        // Highlight the word briefly
+                        positions.forEach(pos => {
+                            const cell = document.querySelector(`.letter-cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
+                            cell.classList.add('selected');
+                        });
+                        
+                        setTimeout(() => {
+                            positions.forEach(pos => {
+                                const cell = document.querySelector(`.letter-cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
+                                cell.classList.remove('selected');
+                            });
+                        }, 1000);
+                        
+                        return;
+                    }
+                }
+                
+                // If no words found, show a message
+                alert('No more words to find!');
+            } else {
+                alert('You\'ve found all the words!');
+            }
+        }
+
+        // Find a word in the grid (returns positions if found)
+        function findWordInGrid(word) {
+            const level = gameData.levels[gameState.currentLevel];
+            const grid = level.grid;
+            const wordUpper = word.toUpperCase();
+            const gridSize = grid.length;
+            
+            // Check all possible starting positions
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    if (grid[row][col] === wordUpper[0]) {
+                        // Check all 8 possible directions
+                        for (let dr = -1; dr <= 1; dr++) {
+                            for (let dc = -1; dc <= 1; dc++) {
+                                if (dr === 0 && dc === 0) continue;
+                                
+                                let match = true;
+                                const positions = [{row, col}];
+                                
+                                for (let i = 1; i < wordUpper.length; i++) {
+                                    const newRow = row + i * dr;
+                                    const newCol = col + i * dc;
+                                    
+                                    if (newRow < 0 || newRow >= gridSize || newCol < 0 || newCol >= gridSize || 
+                                        grid[newRow][newCol] !== wordUpper[i]) {
+                                        match = false;
+                                        break;
+                                    }
+                                    
+                                    positions.push({row: newRow, col: newCol});
+                                }
+                                
+                                if (match) {
+                                    return positions;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return null;
+        }
+
+        // Play a sound
+        function playSound(sound) {
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log('Sound playback prevented:', e));
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Button events
+            shuffleBtn.addEventListener('click', shuffleGrid);
+            hintBtn.addEventListener('click', showHint);
+            changeLevelBtn.addEventListener('click', () => {
+                playSound(clickSound);
+                setupLevelSelect();
+                levelSelectModal.style.display = 'flex';
+            });
+            
+            // Modal events
+            nextLevelBtn.addEventListener('click', () => {
+                playSound(clickSound);
+                levelCompleteModal.style.display = 'none';
+                if (gameState.currentLevel + 1 < gameData.levels.length) {
+                    gameState.currentLevel++;
+                    renderLevel(gameState.currentLevel);
+                }
+            });
+            
+            backToLevelsBtn.addEventListener('click', () => {
+                playSound(clickSound);
+                levelCompleteModal.style.display = 'none';
+                setupLevelSelect();
+                levelSelectModal.style.display = 'flex';
+            });
+            
+            closeLevelSelectBtn.addEventListener('click', () => {
+                playSound(clickSound);
+                levelSelectModal.style.display = 'none';
+            });
+            
+            // Prevent drag-and-drop behavior
+            document.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('letter-cell')) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('load', initGame);
+    </script>
